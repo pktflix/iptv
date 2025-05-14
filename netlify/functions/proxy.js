@@ -1,7 +1,7 @@
 const http = require('http');
 
 exports.handler = async function(event, context) {
-  const targetUrl = 'http://45.68.35.218:4001/play/a01s/index.m3u8';
+  const targetUrl = 'http://103.186.56.150:8088/102/tracks-v1a1/mono.m3u8?token=c23285f05b7a800fedc5c02de90c106aabefabd0-2b165b9fadc080813d6d902ff55b0ebe-1747242020-1747238420';
 
   return new Promise((resolve, reject) => {
     http.get(targetUrl, (response) => {
