@@ -1,17 +1,39 @@
-// server.js const express = require("express"); const fetch = require("node-fetch"); const cors = require("cors");
+import express from 'express';
+import fetch from 'node-fetch';
+import cors from 'cors';
 
-const app = express(); app.use(cors());
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.get("/proxy", async (req, res) => { const { url } = req.query;
+app.use(cors());
 
-if (!url) return res.status(400).send("No URL provided");
+app.get('/proxy', async (req, res) => {
+  const targetUrl = req.query.url;
 
-try { const streamRes = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36", "Referer": req.query.referer || "", }, });
+  if (!targetUrl) {
+    return res.status(400).send('Missing "url" query parameter.');
+  }
 
-res.set("Content-Type", streamRes.headers.get("content-type") || "application/vnd.apple.mpegurl");
-streamRes.body.pipe(res);
+  try {
+    const response = await fetch(targetUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/91.0.4472.124 Safari/537.36',
+      },
+    });
 
-} catch (err) { res.status(500).send("Error fetching stream: " + err.message); } });
+    if (!response.ok) {
+      return res.status(response.status).send('Failed to fetch stream.');
+    }
 
-const PORT = process.env.PORT || 3000; app.listen(PORT, () => console.log(✅ Proxy server running on port ${PORT}));
+    res.setHeader('Content-Type', response.headers.get('content-type'));
+    response.body.pipe(res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Proxy error');
+  }
+});
 
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
