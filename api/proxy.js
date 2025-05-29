@@ -9,21 +9,25 @@ export default async function handler(req, res) {
     const response = await fetch(targetUrl, {
       headers: {
         'User-Agent': req.headers['user-agent'] || '',
-        'Range': req.headers['range'] || '', // Needed for .ts streaming
+        'Range': req.headers['range'] || ''
       }
     });
 
-    // Pass status
+    // Forward important headers
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
+    const contentLength = response.headers.get('content-length');
+    const acceptRanges = response.headers.get('accept-ranges');
+
     res.status(response.status);
-
-    // Set headers
-    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
+    res.setHeader('Content-Type', contentType);
+    if (contentLength) res.setHeader('Content-Length', contentLength);
+    if (acceptRanges) res.setHeader('Accept-Ranges', acceptRanges);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Accept-Ranges', 'bytes');
 
-    // Pipe the stream
+    // Stream body
     response.body.pipe(res);
-  } catch (err) {
-    res.status(500).send("Proxy Error: " + err.message);
+
+  } catch (error) {
+    res.status(500).send("Proxy Error: " + error.message);
   }
 }
