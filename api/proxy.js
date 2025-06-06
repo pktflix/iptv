@@ -1,33 +1,22 @@
 export default async function handler(req, res) {
   const targetUrl = req.query.url;
 
-  if (!targetUrl || !targetUrl.startsWith("http")) {
-    return res.status(400).send("Missing or invalid 'url' query parameter.");
+  if (!targetUrl || !targetUrl.startsWith('http://')) {
+    return res.status(400).json({ error: 'Invalid or missing URL' });
   }
 
   try {
-    const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': req.headers['user-agent'] || '',
-        'Range': req.headers['range'] || ''
-      }
-    });
-
-    // Forward important headers
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
+    const response = await fetch(targetUrl);
+    const contentType = response.headers.get('content-type');
     const contentLength = response.headers.get('content-length');
-    const acceptRanges = response.headers.get('accept-ranges');
 
-    res.status(response.status);
-    res.setHeader('Content-Type', contentType);
-    if (contentLength) res.setHeader('Content-Length', contentLength);
-    if (acceptRanges) res.setHeader('Accept-Ranges', acceptRanges);
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', contentType || 'application/octet-stream');
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
 
-    // Stream body
     response.body.pipe(res);
-
   } catch (error) {
-    res.status(500).send("Proxy Error: " + error.message);
+    res.status(500).json({ error: 'Proxy request failed', details: error.message });
   }
 }
