@@ -1,9 +1,8 @@
 {
-  "version": 2,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/proxy",
-      "dest": "/api/proxy.js"
+      "source": "/proxy",
+      "destination": "/api/proxy"
     }
   ]
 }
